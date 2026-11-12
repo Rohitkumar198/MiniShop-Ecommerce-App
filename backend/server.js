@@ -9,17 +9,24 @@ const connectDB = require("./config/db");
 
 const app = express();
 
+// Allowed frontend origins
 const allowedOrigins = [
   "http://localhost:5173",
   "https://minishop-ecommerce-app.vercel.app",
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
-// CORS
+// CORS Configuration
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      console.log("Request Origin:", origin);
+
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
         return callback(null, true);
       }
 
@@ -29,10 +36,13 @@ app.use(
   })
 );
 
-// Body parser
+// Handle preflight requests
+app.options("*", cors());
+
+// Body Parser
 app.use(express.json());
 
-// Database connection middleware
+// Database Connection Middleware
 app.use(async (req, res, next) => {
   try {
     await connectDB();
@@ -47,7 +57,7 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Health check
+// Health Check
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
@@ -62,7 +72,7 @@ app.use("/api/cart", require("./routes/cartRoutes"));
 app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 
-// Not found
+// Not Found
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -70,13 +80,13 @@ app.use((req, res) => {
   });
 });
 
-// Error handler
+// Global Error Handler
 app.use((error, req, res, next) => {
   console.error("Server Error:", error);
 
   res.status(500).json({
     success: false,
-    message: "Internal Server Error",
+    message: error.message || "Internal Server Error",
   });
 });
 
