@@ -11,7 +11,7 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://minishop-ecommerce-app.vercel.app/",
+  "https://minishop-ecommerce-app.vercel.app",
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
@@ -21,7 +21,6 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
@@ -50,19 +49,26 @@ app.use((req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 5001;
+let dbPromise;
 
-const startServer = async () => {
+const handler = async (req, res) => {
   try {
-    await connectDB();
+    if (!dbPromise) {
+      dbPromise = connectDB().catch((error) => {
+        dbPromise = null;
+        throw error;
+      });
+    }
 
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on port ${PORT}`);
-    });
+    await dbPromise;
+    return app(req, res);
   } catch (error) {
-    console.error("Server startup failed:", error.message);
-    process.exit(1);
+    console.error("API startup failed:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Database connection failed",
+    });
   }
 };
 
-startServer();
+module.exports = handler;
