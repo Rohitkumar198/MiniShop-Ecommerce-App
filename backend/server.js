@@ -11,7 +11,7 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://minishop-e-commerce-app.vercel.app",
+  "https://minishop-ecommerce-app.vercel.app/",
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
