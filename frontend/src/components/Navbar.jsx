@@ -7,7 +7,10 @@ import { fetchCart } from "../redux/slices/cartSlice";
 
 export default function Navbar() {
   const user = useSelector((state) => state.auth.user);
-  const cartCount = useSelector((state) => (state.cart.data.items || []).reduce((sum, item) => sum + item.quantity, 0));
+  const cartCount = useSelector((state) => {
+    const items = state.cart?.data?.items || [];
+    return items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  });
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
